@@ -13,9 +13,7 @@ import (
 
 func main() {
 	AfterTable()
-	// AfterTable()
 	r := gin.Default()
-	// r.Use(CORSMiddleware())
 	r.Use(cors.Middleware(cors.Config{
 		Origins:         "*",
 		Methods:         "GET, PUT, POST, DELETE",
@@ -56,17 +54,15 @@ func GetUserHanlder(c *gin.Context) {
 	var wh string
 	u, err := url.Parse(fmt.Sprintf("?%s", c.Request.URL.RawQuery))
 	if err != nil {
-		fmt.Println("err", err)
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 	q, err := url.ParseQuery(u.RawQuery)
 	if err != nil {
-		fmt.Println("err", err)
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
-	fild := []string{"id", "first_name", "last_name", "email", "gender", "age"}
+	fild := []string{"id", "first_name", "last_name", "email", "gender", "age", "min_age", "max_age"}
 	for key, value := range q {
 		var chekFild bool
 		for i := 0; i < len(fild); i++ {
@@ -79,6 +75,18 @@ func GetUserHanlder(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"message": "fild not mach"})
 			return
 		}
+		if key == "id" {
+			wh += " " + key + " LIKE" + "'" + value[0] + "' and"
+			continue
+		}
+		if key == "min_age" {
+			wh += " " + "age" + " >=" + "'" + value[0] + "' and"
+			continue
+		}
+		if key == "max_age" {
+			wh += " " + "age" + " <=" + "'" + value[0] + "' and"
+			continue
+		}
 		wh += " " + key + " LIKE" + "'%" + value[0] + "%' and"
 	}
 	if wh != "" {
@@ -86,7 +94,6 @@ func GetUserHanlder(c *gin.Context) {
 	}
 	us, err := ListUser(db, wh)
 	if err != nil {
-		fmt.Println("err", err)
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -99,7 +106,6 @@ func GetUserDetailHanlder(c *gin.Context) {
 	db := DB()
 	var u User
 	if err := u.Detail(db, id); err != nil {
-		fmt.Println(err)
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -113,7 +119,6 @@ func CreateUserHanlder(c *gin.Context) {
 		return
 	}
 	db := DB()
-	fmt.Println(u)
 	if err := u.Create(db); err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return

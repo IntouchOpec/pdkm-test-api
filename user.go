@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 )
 
 type Gender string
@@ -41,11 +42,9 @@ func ListUser(db *sql.DB, w string) (*Users, error) {
 		users = append(users, tempUser)
 	}
 	if err := rows.Close(); err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	if err := rows.Err(); err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	return &users, nil
@@ -80,7 +79,6 @@ func (u *User) Create(db *sql.DB) error {
 		return err
 	}
 	tx.Commit()
-	// row.Scan()
 	id, err := row.LastInsertId()
 	if err != nil {
 		return err
@@ -106,6 +104,8 @@ func (u *User) Update(db *sql.DB, id string) error {
 		return err
 	}
 	tx.Commit()
+	u64, _ := strconv.ParseInt(id, 10, 32)
+	u.ID = int(u64)
 	defer db.Close()
 	return nil
 }
